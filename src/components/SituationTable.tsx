@@ -12,11 +12,14 @@ export default function SituationTable({
   title,
   splits: allSplits,
   showYardsPerPlay = false,
+  showShare = false,
   collapseBelow,
 }: {
   title: string;
   splits: SituationSplit[];
   showYardsPerPlay?: boolean;
+  /** Show the "% of snaps" column the workbook carries on every tendency table. */
+  showShare?: boolean;
   /** Fold rows with fewer than this many snaps into one muted summary line — keeps big tables readable. */
   collapseBelow?: number;
 }) {
@@ -32,6 +35,7 @@ export default function SituationTable({
           <thead className="bg-steel-100 text-[11px] uppercase tracking-wide text-steel-500">
             <tr>
               <th className="px-2 py-2">Situation</th>
+              {showShare && <th className="px-2 py-2">% of snaps</th>}
               <th className="px-2 py-2">Run %</th>
               <th className="px-2 py-2">Tendency</th>
               {showYardsPerPlay && <th className="px-2 py-2">Yds/Play</th>}
@@ -46,6 +50,7 @@ export default function SituationTable({
               return (
                 <tr key={s.situation} className="transition hover:bg-steel-50">
                   <td className="px-2 py-1.5 font-medium text-steel-800">{s.situation}</td>
+                  {showShare && <td className="px-2 py-1.5 text-steel-500">{pct(s.shareOfSnaps)}</td>}
                   <td className={`px-2 py-1.5 ${strong ? "font-semibold text-red-600" : ""}`}>
                     {pct(s.runRate)}
                   </td>
@@ -59,7 +64,7 @@ export default function SituationTable({
             })}
             {collapsed.length > 0 && (
               <tr className="text-steel-400">
-                <td colSpan={showYardsPerPlay ? 6 : 5} className="px-2 py-1.5 italic">
+                <td colSpan={5 + (showYardsPerPlay ? 1 : 0) + (showShare ? 1 : 0)} className="px-2 py-1.5 italic">
                   {collapsed.length} more seen fewer than {collapseBelow} times — too small a sample to read
                   anything into
                 </td>
@@ -68,7 +73,7 @@ export default function SituationTable({
             )}
             {splits.length === 0 && collapsed.length === 0 && (
               <tr>
-                <td colSpan={showYardsPerPlay ? 7 : 6} className="px-2 py-4 text-center text-steel-400">
+                <td colSpan={6 + (showYardsPerPlay ? 1 : 0) + (showShare ? 1 : 0)} className="px-2 py-4 text-center text-steel-400">
                   No charted snaps yet.
                 </td>
               </tr>

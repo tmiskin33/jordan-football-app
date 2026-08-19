@@ -2,9 +2,18 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { buildOffenseProfile, buildDefenseProfile } from "@/lib/analytics";
+import {
+  buildOffenseProfile,
+  buildDefenseProfile,
+  buildExplosiveProfile,
+  buildSpecialTeamsSplits,
+} from "@/lib/analytics";
 import SituationTable from "@/components/SituationTable";
 import ConversionTable from "@/components/ConversionTable";
+import ConceptTable from "@/components/ConceptTable";
+import RunDirectionTable from "@/components/RunDirectionTable";
+import ExplosivePanel from "@/components/ExplosivePanel";
+import SpecialTeamsTable from "@/components/SpecialTeamsTable";
 import PlayerUsageTable from "@/components/PlayerUsageTable";
 
 function pct(v: number | null) {
@@ -41,14 +50,17 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
       opponent: true,
       offensePlays: true,
       defensePlays: true,
+      specialTeamsPlays: true,
     },
   });
 
   const ourFilms = films.filter((f) => f.opponent.isOwnTeam);
   const theirFilms = films.filter((f) => !f.opponent.isOwnTeam);
 
-  const ourOffense = ourFilms.flatMap((f) => f.offensePlays);
-  const ourDefense = ourFilms.flatMap((f) => f.defensePlays);
+  const ourOffense = ourFilms.flatMap((f) => f.offensePlays.map((p) => ({ ...p, filmLabel: f.label })));
+  const ourDefense = ourFilms.flatMap((f) => f.defensePlays.map((p) => ({ ...p, filmLabel: f.label })));
+  const ourExplosive = buildExplosiveProfile(ourOffense);
+  const ourSpecialTeams = buildSpecialTeamsSplits(ourFilms.flatMap((f) => f.specialTeamsPlays));
   const ourOffenseProfile = buildOffenseProfile(ourOffense);
   const ourDefenseProfile = buildDefenseProfile(ourDefense);
 
@@ -126,11 +138,20 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
 
         {ourOffenseProfile.totalSnaps > 0 && (
           <div className="mt-6 flex flex-col gap-6">
-            <SituationTable title="By down & distance" splits={ourOffenseProfile.byDownDistance} showYardsPerPlay />
+            <SituationTable title="By down & distance" splits={ourOffenseProfile.byDownDistance} showYardsPerPlay showShare />
             <ConversionTable title="3rd & 4th down conversions" rows={ourOffenseProfile.conversions} />
-            <SituationTable title="By formation" splits={ourOffenseProfile.byFormation} showYardsPerPlay collapseBelow={2} />
-            <SituationTable title="By field zone" splits={ourOffenseProfile.byFieldZone} showYardsPerPlay />
-            <SituationTable title="By quarter" splits={ourOffenseProfile.byQuarter} showYardsPerPlay />
+            <SituationTable title="By formation" splits={ourOffenseProfile.byFormation} showYardsPerPlay showShare collapseBelow={2} />
+            <SituationTable title="By formation strength" splits={ourOffenseProfile.byStrength} showYardsPerPlay showShare />
+            <SituationTable title="By personnel grouping" splits={ourOffenseProfile.byPersonnel} showYardsPerPlay showShare />
+            <SituationTable title="By backfield alignment" splits={ourOffenseProfile.byBackfield} showYardsPerPlay showShare />
+            <SituationTable title="Motion vs no motion" splits={ourOffenseProfile.byMotion} showYardsPerPlay showShare />
+            <SituationTable title="By field zone" splits={ourOffenseProfile.byFieldZone} showYardsPerPlay showShare />
+            <SituationTable title="By quarter" splits={ourOffenseProfile.byQuarter} showYardsPerPlay showShare />
+            <SituationTable title="By hash" splits={ourOffenseProfile.byHash} showYardsPerPlay showShare />
+            <SituationTable title="By play direction" splits={ourOffenseProfile.byDirection} showYardsPerPlay showShare />
+            <RunDirectionTable rows={ourOffenseProfile.runDirectionByFormation} />
+            <ConceptTable title="Run concepts called" rows={ourOffenseProfile.runConcepts} typeLabel="runs" />
+            <ConceptTable title="Pass concepts called" rows={ourOffenseProfile.passConcepts} typeLabel="passes" />
             <PlayerUsageTable rows={ourOffenseProfile.playerUsage} />
           </div>
         )}
@@ -152,11 +173,35 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
 
         {ourDefenseProfile.totalSnaps > 0 && (
           <div className="mt-6 flex flex-col gap-6">
-            <SituationTable title="By down & distance" splits={ourDefenseProfile.byDownDistance} showYardsPerPlay />
-            <SituationTable title="By opponent formation" splits={ourDefenseProfile.byFormationFaced} showYardsPerPlay collapseBelow={2} />
-            <SituationTable title="By field zone" splits={ourDefenseProfile.byFieldZone} showYardsPerPlay />
+            <SituationTable title="By down & distance" splits={ourDefenseProfile.byDownDistance} showYardsPerPlay showShare />
+            <ConversionTable
+              title="3rd & 4th down conversions allowed"
+              rows={ourDefenseProfile.conversionsAllowed}
+              conversionLabel="Conv. % allowed"
+            />
+            <SituationTable title="By opponent formation" splits={ourDefenseProfile.byFormationFaced} showYardsPerPlay showShare collapseBelow={2} />
+            <SituationTable title="By our front" splits={ourDefenseProfile.byFront} showYardsPerPlay showShare />
+            <SituationTable title="By our coverage" splits={ourDefenseProfile.byCoverage} showYardsPerPlay showShare />
+            <SituationTable title="Blitz vs no blitz" splits={ourDefenseProfile.blitzEfficiency} showYardsPerPlay showShare />
+            <SituationTable title="By field zone" splits={ourDefenseProfile.byFieldZone} showYardsPerPlay showShare />
+            <SituationTable title="By quarter" splits={ourDefenseProfile.byQuarter} showYardsPerPlay showShare />
           </div>
         )}
+      </section>
+
+      {/* Explosive plays this game */}
+      {ourOffenseProfile.totalSnaps > 0 && (
+        <section className="mt-10">
+          <h2 className="text-lg font-semibold text-steel-900">Our explosive plays — this game</h2>
+          <p className="mb-3 text-xs text-steel-500">Runs of 10+ and passes of 15+.</p>
+          <ExplosivePanel profile={ourExplosive} />
+        </section>
+      )}
+
+      {/* Special teams this game */}
+      <section className="mt-10">
+        <h2 className="mb-3 text-lg font-semibold text-steel-900">Special teams — this game</h2>
+        <SpecialTeamsTable splits={ourSpecialTeams} />
       </section>
 
       {/* Opponent's own charting of this game, if tagged */}
