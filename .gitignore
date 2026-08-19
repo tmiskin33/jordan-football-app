@@ -43,6 +43,8 @@ next-env.d.ts
 # secrets and deploy config
 .vercel
 .env*
+# ...but the placeholder template documents which vars are needed, so keep it
+!.env.example
 
 # local SQLite databases (superseded by Postgres; may hold real data + password hashes)
 *.db
