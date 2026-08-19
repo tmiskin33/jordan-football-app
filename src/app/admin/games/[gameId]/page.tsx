@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { importWorkbook } from "@/lib/actions/import";
 import FilmUploadForm from "@/components/FilmUploadForm";
 import FilmListItem from "@/components/FilmListItem";
-import SubmitButton from "@/components/SubmitButton";
+import WorkbookImportForm from "@/components/WorkbookImportForm";
 
 export const dynamic = "force-dynamic";
 
@@ -76,13 +76,15 @@ export default async function AdminGamePage({
           self-scout &quot;Team Analytics&quot; workbook (Offense/Defense Play-by-Play) — both are
           auto-detected.
         </p>
-        <form action={importWorkbook} className="mt-3 flex items-center gap-2">
-          <input type="hidden" name="opponentId" value={game.opponentId} />
-          <input type="hidden" name="gameId" value={game.id} />
-          <input type="hidden" name="filmLabel" value={defaultLabel} />
-          <input type="file" name="file" accept=".xlsx" required className="text-sm" />
-          <SubmitButton pendingLabel="Importing…">Import</SubmitButton>
-        </form>
+        <div className="mt-3">
+          <WorkbookImportForm
+            action={importWorkbook}
+            opponentId={game.opponentId}
+            gameId={game.id}
+            filmLabel={defaultLabel}
+            label="Choose workbook to import"
+          />
+        </div>
       </section>
 
       {/* Film for this game */}

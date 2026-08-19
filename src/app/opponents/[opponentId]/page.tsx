@@ -22,7 +22,7 @@ import PlayLogTable, { type PlayLogRow } from "@/components/PlayLogTable";
 import { updateOpponentNotes } from "@/lib/actions/games";
 import { importWorkbook } from "@/lib/actions/import";
 import FilmUploadForm from "@/components/FilmUploadForm";
-import SubmitButton from "@/components/SubmitButton";
+import WorkbookImportForm from "@/components/WorkbookImportForm";
 
 function pct(v: number | null) {
   return v == null ? "—" : `${Math.round(v * 100)}%`;
@@ -517,11 +517,13 @@ export default async function OpponentPage({
                 instead — this general import isn&apos;t tied to one game (and self-scout &quot;Team
                 Analytics&quot; workbooks always need a game).
               </p>
-              <form action={importWorkbook} className="mt-2 flex items-center gap-2">
-                <input type="hidden" name="opponentId" value={opponent.id} />
-                <input type="file" name="file" accept=".xlsx" required className="text-sm" />
-                <SubmitButton pendingLabel="Importing…">Import</SubmitButton>
-              </form>
+              <div className="mt-2">
+                <WorkbookImportForm
+                  action={importWorkbook}
+                  opponentId={opponent.id}
+                  label="Choose workbook to import"
+                />
+              </div>
             </div>
           </div>
         )}

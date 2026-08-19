@@ -5,7 +5,7 @@ import { setOwnTeamFlag, deleteOpponent } from "@/lib/actions/games";
 import { importWorkbook } from "@/lib/actions/import";
 import FilmUploadForm from "@/components/FilmUploadForm";
 import FilmListItem from "@/components/FilmListItem";
-import SubmitButton from "@/components/SubmitButton";
+import WorkbookImportForm from "@/components/WorkbookImportForm";
 import ConfirmButton from "@/components/ConfirmButton";
 
 export const dynamic = "force-dynamic";
@@ -86,17 +86,13 @@ export default async function AdminOpponentPage({
           Upload the scouting workbook — the Opp Offense/Defense/Special Teams Log sheets get parsed in;
           the tendency and game-plan sheets are ignored since the site recomputes those.
         </p>
-        <form action={importWorkbook} className="mt-3 flex items-center gap-2">
-          <input type="hidden" name="opponentId" value={opponent.id} />
-          <input
-            type="file"
-            name="file"
-            accept=".xlsx"
-            required
-            className="text-sm"
+        <div className="mt-3">
+          <WorkbookImportForm
+            action={importWorkbook}
+            opponentId={opponent.id}
+            label="Choose workbook to import"
           />
-          <SubmitButton pendingLabel="Importing…">Import</SubmitButton>
-        </form>
+        </div>
       </section>
 
       {/* Film upload */}
