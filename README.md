@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jordan Beetdiggers Football
 
-## Getting Started
+Schedule, game film, and scouting analytics for Jordan High School football.
 
-First, run the development server:
+Live at **[jordan-football-app.vercel.app](https://jordan-football-app.vercel.app)**
+
+## What it does
+
+- **Schedule** — the season schedule with results and region games, public.
+- **Scouting reports** — per-opponent tendencies and a game plan card, built from
+  charted Hudl film imported out of Excel. Uses *pre-game* film only: film from the
+  actual head-to-head matchup is tagged and excluded so advance scouting stays honest.
+- **Team Analytics** — Jordan's own self-scout: offensive and defensive efficiency
+  dashboards plus a game-by-game season dashboard. Private, coaches only.
+- **Live tendencies** — pick down, distance, and field position on the sideline and
+  get the opponent's most likely call from their charted film.
+- **Film** — video uploaded straight from the browser to Cloudflare R2 and played back
+  on the opponent and game pages.
+
+## Stack
+
+Next.js (App Router) · TypeScript · Tailwind · Prisma · PostgreSQL · Auth.js · Cloudflare R2 · Vercel
+
+## Running locally
 
 ```bash
+npm install
+cp .env.example .env   # then fill in the values
+npx prisma db push     # create the tables
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create the single coach/admin login:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run create-admin -- you@example.com "a strong password"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Importing charted film
 
-## Learn More
+Two Excel formats are auto-detected on upload:
 
-To learn more about Next.js, take a look at the following resources:
+| Workbook | Sheets read | Where to upload |
+| --- | --- | --- |
+| Opponent scouting | `Opp Offense Log`, `Opp Defense Log`, `Opp Special Teams Log` | An opponent's Manage page |
+| Self-scout ("Team Analytics") | `Offense Play-by-Play`, `Defense Play-by-Play`, `Special Teams Log` | A specific game's chart/film page |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Columns are matched by header name, so reordering the sheet is fine. The workbook's
+`(auto)` columns — success, explosive, down & distance, field zone — are skipped and
+recomputed in `src/lib/analytics.ts`, which ports the spreadsheet's own formulas
+(1st down success = 50% of distance, 2nd = 70%, 3rd/4th = 100%; explosive = 10+ yard
+run or 15+ yard pass).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tests
 
-## Deploy on Vercel
+```bash
+npm test
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The analytics tests check the computed tendencies against real charted workbooks, so
+the numbers on the site match what the spreadsheet already produces.

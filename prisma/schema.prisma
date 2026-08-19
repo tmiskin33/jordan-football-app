@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum HomeAway {
+  HOME
+  AWAY
+}
+
+model Opponent {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  maxPrepsSlug   String?
+  isOwnTeam      Boolean  @default(false) // our own self-scout report — kept private, unlike opponent reports
+  whenWeHaveBall String? // coaches' keys, free text
+  whenTheyHaveBall String?
+  mustStopPlays  String?
+  situationalReminders String?
+  personnelNotes String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  games Game[]
+  films Film[]
+}
+
+model Game {
+  id         String    @id @default(cuid())
+  opponentId String
+  opponent   Opponent  @relation(fields: [opponentId], references: [id])
+  week       Int? // schedule week number, for the season dashboard
+  date       DateTime
+  time       String? // e.g. "7:00 PM"
+  homeAway   HomeAway
+  isRegion   Boolean   @default(false)
+  seasonYear Int
+  teamScore  Int? // final score, us
+  oppScore   Int? // final score, them
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  films Film[]
+
+  @@index([seasonYear])
+}
+
+model Film {
+  id          String   @id @default(cuid())
+  opponentId  String
+  opponent    Opponent @relation(fields: [opponentId], references: [id])
+  gameId      String?
+  game        Game?    @relation(fields: [gameId], references: [id])
+  label       String // e.g. "Canyon View - Film 1", "vs Juab"
+  videoKey    String? // R2 object key, null until video uploaded
+  videoUrl    String? // public/signed playback URL
+  notes       String?
+  uploadedAt  DateTime @default(now())
+
+  offensePlays      OffensePlay[]
+  defensePlays      DefensePlay[]
+  specialTeamsPlays SpecialTeamsPlay[]
+
+  @@unique([opponentId, label])
+}
+
+model OffensePlay {
+  id             String  @id @default(cuid())
+  filmId         String
+  film           Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  qtr            Int?
+  down           Int?
+  distance       Int?
+  yardLine       Int? // yards from the goal they are attacking, 1-99
+  hash           String?
+  scoreSituation String?
+  personnel      String?
+  formation      String?
+  strength       String?
+  backfield      String?
+  motion         Boolean?
+  playType       String? // Run / Pass
+  playCall       String?
+  direction      String?
+  ballCarrier    String? // ball carrier / target / key player
+  yards          Int?
+  resultType     String?
+  points         Int? // points scored on this play, self-scout only
+
+  // defense shown against this snap, when tagged
+  front          String?
+  coverage       String?
+  blitz          Boolean?
+  blitzType      String?
+
+  @@index([filmId])
+}
+
+model DefensePlay {
+  id             String  @id @default(cuid())
+  filmId         String
+  film           Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  qtr            Int?
+  down           Int?
+  distance       Int?
+  yardLine       Int?
+  hash           String?
+  defPersonnel   String?
+  front          String?
+  coverage       String?
+  blitz          Boolean?
+  blitzType      String?
+  rushers        Int?
+  offPlayType    String?
+  offPlayCall    String? // opponent's play call, self-scout only
+  formationFaced String?
+  offStrength    String?
+  offDirection   String?
+  offKeyPlayer   String? // opponent's key player, self-scout only
+  yardsAllowed   Int?
+  resultType     String?
+  points         Int? // points allowed on this play, self-scout only
+
+  @@index([filmId])
+}
+
+model SpecialTeamsPlay {
+  id       String  @id @default(cuid())
+  filmId   String
+  film     Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  playNum  Int?
+  odk      String? // O / D / K / S
+  qtr      Int?
+  down     Int?
+  distance Int?
+  yardLine Int?
+  hash     String?
+  playType String?
+  result   String?
+  yards    Int?
+
+  @@index([filmId])
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}

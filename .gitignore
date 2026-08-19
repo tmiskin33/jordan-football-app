@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# secrets and deploy config
+.vercel
+.env*
+
+# local SQLite databases (superseded by Postgres; may hold real data + password hashes)
+*.db
+*.db-journal

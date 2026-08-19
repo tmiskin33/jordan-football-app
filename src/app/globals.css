@@ -3,6 +3,29 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Jordan Beetdiggers brand: maroon #730F37 + steel gray #706D6D, sampled directly from the team logo */
+  --color-maroon-50: #fbf1f5;
+  --color-maroon-100: #f3d9e3;
+  --color-maroon-200: #e3aec5;
+  --color-maroon-300: #cc7a9c;
+  --color-maroon-400: #a94a70;
+  --color-maroon-500: #8a2b54;
+  --color-maroon-600: #7a1a44;
+  --color-maroon-700: #730f37;
+  --color-maroon-800: #560b29;
+  --color-maroon-900: #3a071c;
+
+  --color-steel-50: #f5f5f4;
+  --color-steel-100: #e7e6e5;
+  --color-steel-200: #d1cfce;
+  --color-steel-300: #b3b0af;
+  --color-steel-400: #928e8e;
+  --color-steel-500: #706d6d;
+  --color-steel-600: #5c5959;
+  --color-steel-700: #464343;
+  --color-steel-800: #302e2e;
+  --color-steel-900: #1c1b1b;
 }
 
 @theme inline {
@@ -10,17 +33,41 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-maroon-50: var(--color-maroon-50);
+  --color-maroon-100: var(--color-maroon-100);
+  --color-maroon-200: var(--color-maroon-200);
+  --color-maroon-300: var(--color-maroon-300);
+  --color-maroon-400: var(--color-maroon-400);
+  --color-maroon-500: var(--color-maroon-500);
+  --color-maroon-600: var(--color-maroon-600);
+  --color-maroon-700: var(--color-maroon-700);
+  --color-maroon-800: var(--color-maroon-800);
+  --color-maroon-900: var(--color-maroon-900);
+
+  --color-steel-50: var(--color-steel-50);
+  --color-steel-100: var(--color-steel-100);
+  --color-steel-200: var(--color-steel-200);
+  --color-steel-300: var(--color-steel-300);
+  --color-steel-400: var(--color-steel-400);
+  --color-steel-500: var(--color-steel-500);
+  --color-steel-600: var(--color-steel-600);
+  --color-steel-700: var(--color-steel-700);
+  --color-steel-800: var(--color-steel-800);
+  --color-steel-900: var(--color-steel-900);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Sideways-scrolling nav on phones shouldn't show a scrollbar track. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

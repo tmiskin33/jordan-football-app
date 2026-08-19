@@ -1,69 +1,128 @@
 import Image from "next/image";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+function gameDate(date: Date, long = false) {
+  return date.toLocaleDateString("en-US", {
+    weekday: long ? "long" : undefined,
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+export default async function Home() {
+  const games = await prisma.game.findMany({
+    include: { opponent: true },
+    orderBy: { date: "asc" },
+  });
+
+  const today = new Date(new Date().toDateString());
+  const nextGame = games.find((g) => g.date >= today && g.teamScore == null);
+  const played = games.filter((g) => g.teamScore != null && g.oppScore != null);
+  const lastGame = played[played.length - 1];
+  const wins = played.filter((g) => g.teamScore! > g.oppScore!).length;
+  const losses = played.filter((g) => g.teamScore! < g.oppScore!).length;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-maroon-800 via-maroon-700 to-maroon-900 text-white">
+        {/* soft glow so the flat maroon band reads with some depth */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-maroon-400/20 blur-3xl"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-16 text-center sm:flex-row sm:gap-10 sm:text-left">
+          <div className="rounded-2xl bg-white p-5 shadow-xl ring-1 ring-black/5">
+            <Image src="/logo.png" alt="Jordan Beetdiggers logo" width={130} height={101} priority />
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-maroon-200">
+              Jordan High School
+            </p>
+            <h1 className="mt-1 text-4xl font-bold tracking-tight sm:text-5xl">Beetdiggers Football</h1>
+            <p className="mt-4 inline-block rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold ring-1 ring-white/20 backdrop-blur">
+              {wins}-{losses} overall
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Cards */}
+      <section className="mx-auto max-w-6xl px-4 py-10">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {nextGame && (
+            <Link
+              href={`/opponents/${nextGame.opponentId}`}
+              className="group rounded-2xl border border-steel-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-maroon-300 hover:shadow-lg"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-maroon-700">Next game</p>
+              <p className="mt-1 text-xl font-bold text-steel-900">
+                {nextGame.homeAway === "HOME" ? "vs" : "@"} {nextGame.opponent.name}
+              </p>
+              <p className="text-sm text-steel-500">
+                {gameDate(nextGame.date, true)}
+                {nextGame.time ? ` · ${nextGame.time}` : ""}
+                {nextGame.isRegion ? " · Region" : ""}
+              </p>
+              <p className="mt-3 text-sm font-medium text-maroon-700 group-hover:underline">
+                View scouting report →
+              </p>
+            </Link>
+          )}
+
+          {lastGame && (
+            <Link
+              href={`/opponents/${lastGame.opponentId}`}
+              className="group rounded-2xl border border-steel-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-maroon-300 hover:shadow-lg"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-steel-500">Last game</p>
+              <p className="mt-1 text-xl font-bold text-steel-900">
+                {lastGame.homeAway === "HOME" ? "vs" : "@"} {lastGame.opponent.name}
+              </p>
+              <p
+                className={`text-sm font-semibold ${
+                  lastGame.teamScore! > lastGame.oppScore!
+                    ? "text-emerald-600"
+                    : lastGame.teamScore! < lastGame.oppScore!
+                      ? "text-red-600"
+                      : "text-steel-600"
+                }`}
+              >
+                {lastGame.teamScore! > lastGame.oppScore! ? "W" : lastGame.teamScore! < lastGame.oppScore! ? "L" : "T"}{" "}
+                {lastGame.teamScore}-{lastGame.oppScore} · {gameDate(lastGame.date)}
+              </p>
+              <p className="mt-3 text-sm font-medium text-maroon-700 group-hover:underline">
+                Review the film →
+              </p>
+            </Link>
+          )}
         </div>
-      </main>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href="/schedule"
+            className="rounded-full bg-maroon-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-maroon-800 hover:shadow-md"
+          >
+            Full schedule
+          </Link>
+          <Link
+            href="/opponents"
+            className="rounded-full border border-steel-300 bg-white px-5 py-2.5 text-sm font-semibold text-steel-700 transition hover:border-steel-400 hover:bg-steel-100"
+          >
+            Scouting reports
+          </Link>
+          <Link
+            href="/live"
+            className="rounded-full border border-steel-300 bg-white px-5 py-2.5 text-sm font-semibold text-steel-700 transition hover:border-steel-400 hover:bg-steel-100"
+          >
+            Live tendencies
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
