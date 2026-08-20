@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "verify-templates": "tsx scripts/verify-templates.ts",
     "create-admin": "node scripts/create-admin.mjs"
   },
   "dependencies": {
