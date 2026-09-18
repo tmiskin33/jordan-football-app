@@ -2,7 +2,7 @@
 
 Schedule, game film, and scouting analytics for Jordan High School football.
 
-Live at **[jordan-football-app.vercel.app](https://jordan-football-app.vercel.app)**
+Live at **[jordanfootballapp.vercel.app](https://jordanfootballapp.vercel.app)**
 
 ## What it does
 
