@@ -49,3 +49,6 @@ next-env.d.ts
 # local SQLite databases (superseded by Postgres; may hold real data + password hashes)
 *.db
 *.db-journal
+
+# personal Claude Code overrides
+.claude/settings.local.json
