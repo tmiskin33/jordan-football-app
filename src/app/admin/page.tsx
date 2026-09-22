@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const [opponents, games] = await Promise.all([
-    prisma.opponent.findMany({ orderBy: { name: "asc" } }),
+    prisma.opponent.findMany({ orderBy: [{ isOwnTeam: "desc" }, { name: "asc" }] }),
     prisma.game.findMany({ include: { opponent: true }, orderBy: { date: "asc" } }),
   ]);
 
@@ -25,7 +25,7 @@ export default async function AdminDashboard() {
             {opponents.map((o) => (
               <li key={o.id} className="flex items-center justify-between px-4 py-2.5">
                 <span>
-                  {o.name}
+                  <span className={o.isOwnTeam ? "font-bold" : undefined}>{o.name}</span>
                   {o.isOwnTeam && (
                     <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
                       private
