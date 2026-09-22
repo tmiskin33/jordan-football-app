@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { importScoutingWorkbook, importTeamAnalyticsWorkbook, isTeamAnalyticsWorkbook } from "@/lib/excelImport";
+import {
+  importHudlPlaylistWorkbook,
+  importScoutingWorkbook,
+  importTeamAnalyticsWorkbook,
+  isHudlPlaylistWorkbook,
+  isTeamAnalyticsWorkbook,
+} from "@/lib/excelImport";
 
 export async function importWorkbook(formData: FormData) {
   const session = await auth();
@@ -25,17 +31,20 @@ export async function importWorkbook(formData: FormData) {
   const buffer = Buffer.from(arrayBuffer);
 
   const isTeamAnalytics = await isTeamAnalyticsWorkbook(buffer);
+  const isHudlPlaylist = !isTeamAnalytics && (await isHudlPlaylistWorkbook(buffer));
 
-  if (isTeamAnalytics && (!gameId || !filmLabel)) {
+  if ((isTeamAnalytics || isHudlPlaylist) && (!gameId || !filmLabel)) {
     redirect(
       `${returnPath}?importError=${encodeURIComponent(
-        'This looks like a self-scout "Team Analytics" workbook (one game per file) — upload it from that game\'s "chart/film" page instead of the general import.'
+        'This looks like a single-game workbook (a self-scout "Team Analytics" file or a raw Hudl "Playlist Data" export) — upload it from that game\'s "chart/film" page instead of the general import.'
       )}`
     );
   }
 
   const result = isTeamAnalytics
     ? await importTeamAnalyticsWorkbook(opponentId, gameId!, filmLabel!, buffer)
+    : isHudlPlaylist
+    ? await importHudlPlaylistWorkbook(opponentId, gameId!, filmLabel!, buffer)
     : await importScoutingWorkbook(opponentId, buffer, gameId);
 
   revalidatePath(`/opponents/${opponentId}`);

@@ -60,6 +60,41 @@ function cellBool(row: ExcelJS.Row, idx: Map<string, number>, header: string): b
   return null;
 }
 
+/** Case-insensitive header lookup — Hudl's own exports aren't guaranteed to match our templates' exact casing. */
+function headerIndexCI(sheet: ExcelJS.Worksheet): Map<string, number> {
+  const map = new Map<string, number>();
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell((cell, colNumber) => {
+    const value = cell.value;
+    if (typeof value === "string" && value.trim()) {
+      map.set(value.trim().toUpperCase(), colNumber);
+    }
+  });
+  return map;
+}
+
+/** Hudl's Blitz column holds a blitz name/type when blitzed and is blank otherwise (unlike our templates' plain Y/N column). */
+function cellBlitz(
+  row: ExcelJS.Row,
+  idx: Map<string, number>,
+  header: string
+): { blitz: boolean | null; blitzType: string | null } {
+  const s = cellStr(row, idx, header);
+  if (s == null) return { blitz: null, blitzType: null };
+  const t = s.toLowerCase();
+  if (t === "y" || t === "yes" || t === "true") return { blitz: true, blitzType: null };
+  if (t === "n" || t === "no" || t === "false") return { blitz: false, blitzType: null };
+  return { blitz: true, blitzType: s };
+}
+
+/** The one sheet in a Hudl "Playlist Data" export always carries an ODK/QTR/PLAY TYPE column trio; find it regardless of sheet name (Hudl names it generically, e.g. "Sheet1"). */
+function findHudlPlaylistSheet(workbook: ExcelJS.Workbook): ExcelJS.Worksheet | undefined {
+  return workbook.worksheets.find((sheet) => {
+    const idx = headerIndexCI(sheet);
+    return idx.has("ODK") && idx.has("QTR") && idx.has("PLAY TYPE");
+  });
+}
+
 /**
  * Imports the "Opp Offense/Defense/Special Teams Log" sheets from a scouting
  * workbook (the same shape produced from Hudl exports). Columns are matched
@@ -405,6 +440,159 @@ export async function importTeamAnalyticsWorkbook(
         await tx.specialTeamsPlay.createMany({ data: rows });
         result.specialTeamsPlaysImported = rows.length;
       }
+    }
+  });
+
+  return result;
+}
+
+/** True if this workbook is a raw Hudl "Playlist Data" export — the flat play-by-play sheet Hudl generates directly, rather than one of our own templates. */
+export async function isHudlPlaylistWorkbook(buffer: Buffer): Promise<boolean> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
+  return !!findHudlPlaylistSheet(workbook);
+}
+
+/**
+ * Imports a raw Hudl "Playlist Data" export: one flat sheet with columns
+ * PLAY #, ODK, DN, DIST, HASH, YARD LN, PLAY TYPE, RESULT, GN/LS, OFF FORM,
+ * OFF PLAY, OFF STR, PLAY DIR, GAP, PASS ZONE, DEF FRONT, COVERAGE, BLITZ,
+ * QTR — no manual re-templating needed, it's exactly what Hudl exports.
+ *
+ * Every row belongs to one game, so — like the Team Analytics workbook — it
+ * all goes into a single Film tagged to that game. Rows are split by the ODK
+ * column: "O" -> OffensePlay, "D" -> DefensePlay, anything else (K, S, ...)
+ * -> SpecialTeamsPlay, tagged with the raw ODK letter. GAP and PASS ZONE have
+ * no home in our schema yet and are dropped.
+ */
+export async function importHudlPlaylistWorkbook(
+  opponentId: string,
+  gameId: string,
+  filmLabel: string,
+  buffer: Buffer
+): Promise<ImportResult> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
+
+  const result: ImportResult = {
+    filmsCreated: 0,
+    offensePlaysImported: 0,
+    defensePlaysImported: 0,
+    specialTeamsPlaysImported: 0,
+    errors: [],
+  };
+
+  const sheet = findHudlPlaylistSheet(workbook);
+  if (!sheet) {
+    result.errors.push('Couldn\'t find a Hudl playlist sheet (expected "ODK", "QTR", and "PLAY TYPE" columns).');
+    return result;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const film = await tx.film.upsert({
+      where: { opponentId_label: { opponentId, label: filmLabel } },
+      update: { gameId },
+      create: { opponentId, label: filmLabel, gameId },
+    });
+    result.filmsCreated = 1;
+
+    const idx = headerIndexCI(sheet);
+    const offenseRows: Prisma.OffensePlayCreateManyInput[] = [];
+    const defenseRows: Prisma.DefensePlayCreateManyInput[] = [];
+    const specialTeamsRows: Prisma.SpecialTeamsPlayCreateManyInput[] = [];
+
+    for (let r = 2; r <= sheet.rowCount; r++) {
+      const row = sheet.getRow(r);
+      const odk = cellStr(row, idx, "ODK");
+      const playNum = cellNum(row, idx, "PLAY #");
+      if (!odk && playNum == null) continue; // fully blank row
+
+      const qtr = cellNum(row, idx, "QTR");
+      const down = cellNum(row, idx, "DN");
+      const distance = cellNum(row, idx, "DIST");
+      const yardLine = cellNum(row, idx, "YARD LN");
+      const hash = cellStr(row, idx, "HASH");
+      const playType = cellStr(row, idx, "PLAY TYPE");
+      const resultType = cellStr(row, idx, "RESULT");
+      const yards = cellNum(row, idx, "GN/LS");
+      const formation = cellStr(row, idx, "OFF FORM");
+      const playCall = cellStr(row, idx, "OFF PLAY");
+      const strength = cellStr(row, idx, "OFF STR");
+      const direction = cellStr(row, idx, "PLAY DIR");
+      const front = cellStr(row, idx, "DEF FRONT");
+      const coverage = cellStr(row, idx, "COVERAGE");
+      const { blitz, blitzType } = cellBlitz(row, idx, "BLITZ");
+
+      if (odk === "O") {
+        offenseRows.push({
+          filmId: film.id,
+          qtr,
+          down,
+          distance,
+          yardLine,
+          hash,
+          formation,
+          strength,
+          playType,
+          playCall,
+          direction,
+          yards,
+          resultType,
+          front,
+          coverage,
+          blitz,
+          blitzType,
+        });
+      } else if (odk === "D") {
+        defenseRows.push({
+          filmId: film.id,
+          qtr,
+          down,
+          distance,
+          yardLine,
+          hash,
+          front,
+          coverage,
+          blitz,
+          blitzType,
+          offPlayType: playType,
+          offPlayCall: playCall,
+          formationFaced: formation,
+          offStrength: strength,
+          offDirection: direction,
+          yardsAllowed: yards,
+          resultType,
+        });
+      } else {
+        // K (kicking), S, or any other ODK letter: log to Special Teams,
+        // tagged with the raw letter so it's still distinguishable.
+        specialTeamsRows.push({
+          filmId: film.id,
+          playNum,
+          odk: odk ?? "K",
+          qtr,
+          down,
+          distance,
+          yardLine,
+          hash,
+          playType,
+          result: resultType,
+          yards,
+        });
+      }
+    }
+
+    if (offenseRows.length > 0) {
+      await tx.offensePlay.createMany({ data: offenseRows });
+      result.offensePlaysImported = offenseRows.length;
+    }
+    if (defenseRows.length > 0) {
+      await tx.defensePlay.createMany({ data: defenseRows });
+      result.defensePlaysImported = defenseRows.length;
+    }
+    if (specialTeamsRows.length > 0) {
+      await tx.specialTeamsPlay.createMany({ data: specialTeamsRows });
+      result.specialTeamsPlaysImported = specialTeamsRows.length;
     }
   });
 

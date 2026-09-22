@@ -68,12 +68,12 @@ export default async function AdminGamePage({
 
       {/* Excel chart import */}
       <section className="mt-8">
-        <h2 className="text-lg font-semibold text-steel-900">Upload this game's film chart</h2>
+        <h2 className="text-lg font-semibold text-steel-900">Upload this game&apos;s film chart</h2>
         <p className="mt-1 text-xs text-steel-500">
           Upload the charted workbook for this game and it gets parsed in and tagged to {defaultLabel}.
-          Works for either an opponent-scouting workbook (Opp Offense/Defense/Special Teams Log) or a
-          self-scout &quot;Team Analytics&quot; workbook (Offense/Defense Play-by-Play) — both are
-          auto-detected.
+          Works for an opponent-scouting workbook (Opp Offense/Defense/Special Teams Log), a self-scout
+          &quot;Team Analytics&quot; workbook (Offense/Defense Play-by-Play), or a raw Hudl &quot;Playlist
+          Data&quot; export straight off Hudl with no re-templating — all three are auto-detected.
         </p>
         <div className="mt-3">
           <WorkbookImportForm
