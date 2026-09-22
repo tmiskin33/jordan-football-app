@@ -29,8 +29,11 @@ export default async function LoginPage({
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-6 px-4">
       <div>
-        <h1 className="text-2xl font-bold text-steel-900">Coach login</h1>
-        <p className="text-sm text-steel-500">Sign in to manage film, imports, and the schedule.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-maroon-600">
+          Beetdiggers Football
+        </p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-steel-900 sm:text-3xl">Coach login</h1>
+        <p className="mt-1 text-sm text-steel-500">Sign in to manage film, imports, and the schedule.</p>
       </div>
       <form action={login} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">

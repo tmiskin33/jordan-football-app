@@ -15,6 +15,7 @@ import RunDirectionTable from "@/components/RunDirectionTable";
 import ExplosivePanel from "@/components/ExplosivePanel";
 import SpecialTeamsTable from "@/components/SpecialTeamsTable";
 import PlayerUsageTable from "@/components/PlayerUsageTable";
+import PageHeader from "@/components/PageHeader";
 
 function pct(v: number | null) {
   return v == null ? "—" : `${Math.round(v * 100)}%`;
@@ -82,14 +83,18 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
       : null;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="border-l-4 border-maroon-700 pl-3 text-2xl font-bold text-steel-900">
+    <>
+      <PageHeader
+        eyebrow="Beetdiggers Football"
+        title={
+          <>
             {game.week != null ? `Week ${game.week}: ` : ""}
             {matchupLabel}
-          </h1>
-          <p className="mt-1 text-sm text-steel-500">
+          </>
+        }
+        maxWidth="max-w-5xl"
+        description={
+          <>
             {dateLabel}
             {result && (
               <span
@@ -100,23 +105,26 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
                 {result}
               </span>
             )}
-          </p>
-        </div>
-        <div className="flex gap-2 text-sm">
-          <Link
-            href={`/opponents/${game.opponentId}`}
-            className="rounded-md border border-steel-300 px-3 py-1.5 text-steel-700 hover:bg-steel-100"
-          >
-            Scouting report
-          </Link>
-          <Link
-            href={`/admin/games/${game.id}`}
-            className="rounded-md border border-steel-300 px-3 py-1.5 text-steel-700 hover:bg-steel-100"
-          >
-            Chart / upload film
-          </Link>
-        </div>
-      </div>
+          </>
+        }
+        action={
+          <div className="flex gap-2 text-sm">
+            <Link
+              href={`/opponents/${game.opponentId}`}
+              className="rounded-md border border-steel-300 bg-white px-3 py-1.5 text-steel-700 transition hover:border-maroon-300 hover:bg-maroon-50"
+            >
+              Scouting report
+            </Link>
+            <Link
+              href={`/admin/games/${game.id}`}
+              className="rounded-md border border-steel-300 bg-white px-3 py-1.5 text-steel-700 transition hover:border-maroon-300 hover:bg-maroon-50"
+            >
+              Chart / upload film
+            </Link>
+          </div>
+        }
+      />
+      <div className="mx-auto max-w-5xl px-4 py-8">
 
       {/* Our team analytics */}
       <section className="mt-8">
@@ -226,6 +234,7 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
           </div>
         </section>
       )}
-    </div>
+      </div>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import FilmUploadForm from "@/components/FilmUploadForm";
 import FilmListItem from "@/components/FilmListItem";
 import WorkbookImportForm from "@/components/WorkbookImportForm";
 import ConfirmButton from "@/components/ConfirmButton";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -35,13 +36,20 @@ export default async function AdminOpponentPage({
     : undefined;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-steel-900">Manage: {opponent.name}</h1>
-        <Link href={`/opponents/${opponent.id}`} className="text-sm text-steel-600 hover:underline">
-          View public page →
-        </Link>
-      </div>
+    <>
+      <PageHeader
+        eyebrow="Manage"
+        title={opponent.name}
+        action={
+          <Link
+            href={`/opponents/${opponent.id}`}
+            className="rounded-md border border-steel-300 bg-white px-3 py-1.5 text-sm text-steel-700 transition hover:border-maroon-300 hover:bg-maroon-50"
+          >
+            View public page →
+          </Link>
+        }
+      />
+      <div className="mx-auto max-w-3xl px-4 py-8">
 
       {importSummary && (
         <p className="mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{importSummary}</p>
@@ -123,6 +131,7 @@ export default async function AdminOpponentPage({
           </ConfirmButton>
         </form>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

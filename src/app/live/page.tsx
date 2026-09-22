@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { fieldZoneBucket } from "@/lib/analytics";
 import LiveTendencies, { type TendencyPlay } from "@/components/LiveTendencies";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -51,15 +52,18 @@ export default async function LivePage({
     : [];
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="border-l-4 border-maroon-700 pl-3 text-2xl font-bold text-steel-900">
-        Live tendencies
-      </h1>
-      <p className="mt-1 text-sm text-steel-500">
-        Pick the situation and get the most likely call from the opponent&apos;s charted film — built for
-        the sideline.
-      </p>
-
+    <>
+      <PageHeader
+        eyebrow="Beetdiggers Football"
+        title="Live tendencies"
+        description={
+          <>
+            Pick the situation and get the most likely call from the opponent&apos;s charted film — built
+            for the sideline.
+          </>
+        }
+      />
+      <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Opponent picker */}
       <div className="mt-5 flex flex-wrap gap-2">
         {sorted.map((o) => (
@@ -91,6 +95,7 @@ export default async function LivePage({
       ) : (
         <p className="mt-6 text-sm text-steel-500">No opponents on the schedule yet.</p>
       )}
-    </div>
+      </div>
+    </>
   );
 }

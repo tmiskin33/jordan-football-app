@@ -5,6 +5,7 @@ import { importWorkbook } from "@/lib/actions/import";
 import FilmUploadForm from "@/components/FilmUploadForm";
 import FilmListItem from "@/components/FilmListItem";
 import WorkbookImportForm from "@/components/WorkbookImportForm";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -37,23 +38,21 @@ export default async function AdminGamePage({
   const defaultLabel = `${game.homeAway === "HOME" ? "vs" : "@"} ${game.opponent.name}`;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-steel-900">
-            {defaultLabel} — {dateLabel}
-          </h1>
-          <p className="text-sm text-steel-500">
-            Charts and film uploaded here are tagged to this specific game.
-          </p>
-        </div>
-        <Link
-          href={`/admin/opponents/${game.opponentId}`}
-          className="text-sm text-steel-600 hover:underline"
-        >
-          Manage {game.opponent.name} →
-        </Link>
-      </div>
+    <>
+      <PageHeader
+        eyebrow="Manage"
+        title={`${defaultLabel} — ${dateLabel}`}
+        description="Charts and film uploaded here are tagged to this specific game."
+        action={
+          <Link
+            href={`/admin/opponents/${game.opponentId}`}
+            className="rounded-md border border-steel-300 bg-white px-3 py-1.5 text-sm text-steel-700 transition hover:border-maroon-300 hover:bg-maroon-50"
+          >
+            Manage {game.opponent.name} →
+          </Link>
+        }
+      />
+      <div className="mx-auto max-w-3xl px-4 py-8">
 
       {importSummary && (
         <p className="mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{importSummary}</p>
@@ -104,6 +103,7 @@ export default async function AdminGamePage({
           <FilmUploadForm opponentId={game.opponentId} gameId={game.id} defaultLabel={defaultLabel} />
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

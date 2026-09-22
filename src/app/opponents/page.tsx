@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -24,19 +25,20 @@ export default async function OpponentsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="border-l-4 border-maroon-700 pl-3 text-2xl font-bold text-steel-900">
-        Scouting reports
-      </h1>
-      <p className="mt-1 text-sm text-steel-500">Opponent tendencies, game plan cards, and film.</p>
-
+    <>
+      <PageHeader
+        eyebrow="Beetdiggers Football"
+        title="Scouting reports"
+        description="Opponent tendencies, game plan cards, and film."
+      />
+      <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="mt-6 overflow-hidden rounded-xl border border-steel-200 bg-white shadow-sm">
         {sorted.length === 0 && <p className="p-6 text-sm text-steel-500">No opponents yet.</p>}
         <ul className="divide-y divide-steel-200">
           {sorted.map((opp, index) => {
             const game = opp.games[0];
             return (
-              <li key={opp.id} className="flex items-center gap-3 px-4 py-3 transition hover:bg-steel-50">
+              <li key={opp.id} className="flex items-center gap-3 px-4 py-3 transition hover:bg-maroon-50/60">
                 {game && (
                   <span className="shrink-0 rounded-full bg-maroon-50 px-2.5 py-1 text-xs font-semibold text-maroon-700">
                     Game {index + 1}
@@ -58,6 +60,7 @@ export default async function OpponentsPage() {
           })}
         </ul>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

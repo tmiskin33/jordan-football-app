@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +27,17 @@ export default async function SchedulePage() {
   const nextGameId = games.find((g) => g.date >= today && g.teamScore == null)?.id;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="flex items-baseline justify-between">
-        <h1 className="border-l-4 border-maroon-700 pl-3 text-2xl font-bold text-steel-900">Schedule</h1>
-        <p className="text-sm font-semibold text-maroon-700">
-          {wins}-{losses} overall
-        </p>
-      </div>
-
+    <>
+      <PageHeader
+        eyebrow="Beetdiggers Football"
+        title="Schedule"
+        action={
+          <span className="rounded-full bg-maroon-700 px-3 py-1.5 text-sm font-semibold text-white">
+            {wins}-{losses} overall
+          </span>
+        }
+      />
+      <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="mt-6 overflow-hidden rounded-xl border border-steel-200 bg-white shadow-sm">
         {games.length === 0 && (
           <p className="p-6 text-sm text-steel-500">No games on the schedule yet.</p>
@@ -46,7 +50,7 @@ export default async function SchedulePage() {
               <li
                 key={game.id}
                 className={`flex items-center justify-between gap-4 px-4 py-3 transition ${
-                  isNext ? "border-l-4 border-maroon-700 bg-maroon-50" : "hover:bg-steel-50"
+                  isNext ? "border-l-4 border-maroon-700 bg-maroon-50" : "hover:bg-maroon-50/60"
                 }`}
               >
                 <div className="flex items-baseline gap-4">
@@ -89,6 +93,7 @@ export default async function SchedulePage() {
           })}
         </ul>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

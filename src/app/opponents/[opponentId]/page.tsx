@@ -13,6 +13,7 @@ import {
 import SituationTable from "@/components/SituationTable";
 import ConversionTable from "@/components/ConversionTable";
 import ConceptTable from "@/components/ConceptTable";
+import PageHeader from "@/components/PageHeader";
 import RunDirectionTable from "@/components/RunDirectionTable";
 import ExplosivePanel from "@/components/ExplosivePanel";
 import SpecialTeamsTable from "@/components/SpecialTeamsTable";
@@ -167,27 +168,30 @@ export default async function OpponentPage({
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="border-l-4 border-maroon-700 pl-3 text-2xl font-bold text-steel-900">
-            {opponent.name}
-          </h1>
-          {opponent.isOwnTeam && (
-            <span className="mt-1 inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+    <>
+      <PageHeader
+        eyebrow="Scouting report"
+        title={opponent.name}
+        maxWidth="max-w-5xl"
+        badge={
+          opponent.isOwnTeam && (
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
               Private — our team
             </span>
-          )}
-        </div>
-        {session && (
-          <Link
-            href={`/admin/opponents/${opponent.id}`}
-            className="rounded-md border border-steel-300 px-3 py-1.5 text-sm text-steel-700 hover:bg-steel-100"
-          >
-            Manage
-          </Link>
-        )}
-      </div>
+          )
+        }
+        action={
+          session && (
+            <Link
+              href={`/admin/opponents/${opponent.id}`}
+              className="rounded-md border border-steel-300 bg-white px-3 py-1.5 text-sm text-steel-700 transition hover:border-maroon-300 hover:bg-maroon-50"
+            >
+              Manage
+            </Link>
+          )
+        }
+      />
+      <div className="mx-auto max-w-5xl px-4 py-8">
 
       {/* Games */}
       {relevantGames.length > 0 && (
@@ -534,6 +538,7 @@ export default async function OpponentPage({
         <h2 className="mb-3 text-lg font-semibold text-steel-900">Play log</h2>
         <PlayLogTable rows={playLogRows} />
       </section>
-    </div>
+      </div>
+    </>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { createOpponent, createGame, updateGameResult, deleteGame } from "@/lib/actions/games";
 import ConfirmButton from "@/components/ConfirmButton";
+import PageHeader from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -14,16 +15,16 @@ export default async function AdminDashboard() {
   const currentSeason = new Date().getFullYear();
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="border-l-4 border-maroon-700 pl-3 text-2xl font-bold text-steel-900">Admin</h1>
-
+    <>
+      <PageHeader eyebrow="Beetdiggers Football" title="Admin" maxWidth="max-w-4xl" />
+      <div className="mx-auto max-w-4xl px-4 py-8">
       {/* Opponents */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold text-steel-900">Opponents / self-scout</h2>
         <div className="mt-3 overflow-hidden rounded-lg border border-steel-200 bg-white">
           <ul className="divide-y divide-steel-200">
             {opponents.map((o) => (
-              <li key={o.id} className="flex items-center justify-between px-4 py-2.5">
+              <li key={o.id} className="flex items-center justify-between px-4 py-2.5 transition hover:bg-maroon-50/60">
                 <span>
                   <span className={o.isOwnTeam ? "font-bold" : undefined}>{o.name}</span>
                   {o.isOwnTeam && (
@@ -71,7 +72,7 @@ export default async function AdminDashboard() {
         <div className="mt-3 overflow-hidden rounded-lg border border-steel-200 bg-white">
           <ul className="divide-y divide-steel-200">
             {games.map((g) => (
-              <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm">
+              <li key={g.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 text-sm transition hover:bg-maroon-50/60">
                 <span>
                   {g.date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} —{" "}
                   {g.homeAway === "HOME" ? "vs" : "@"} {g.opponent.name}
@@ -151,6 +152,7 @@ export default async function AdminDashboard() {
           </button>
         </form>
       </section>
-    </div>
+      </div>
+    </>
   );
 }
